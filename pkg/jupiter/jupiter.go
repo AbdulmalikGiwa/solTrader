@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+const (
+	// BuyType is the type of trade to buy
+	BuyType = "buy"
+	// SellType is the type of trade to sell
+	SellType = "sell"
+)
+
 // Client wraps the Jupiter client
 type Client struct {
 	JupiterClient *jupiter.ClientWithResponses
@@ -30,11 +37,22 @@ func NewClient(config *config.TradingConfig) *Client {
 	}
 }
 
-// BuyToken buys the specified amount of a token, buying is with token set in config, default is USDC
-func (c *Client) BuyToken(tokenMint string, amount float64) error {
+// TradeToken buys the specified amount of a token, buying is with token set in config, default is USDC
+func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) error {
+	var buyToken string
+	var sellToken string
+
+	if tradeType == BuyType {
+		buyToken = tokenMint
+		sellToken = c.config.BaseMint
+	}
+	if tradeType == SellType {
+		buyToken = c.config.BaseMint
+		sellToken = tokenMint
+	}
 	quoteResponse, err := c.JupiterClient.GetQuoteWithResponse(c.config.Ctx, &jupiter.GetQuoteParams{
-		InputMint:  tokenMint,
-		OutputMint: c.config.BaseMint,
+		InputMint:  buyToken,
+		OutputMint: sellToken,
 		Amount:     jupiter.AmountParameter(amount),
 		// TODO: Set slippage
 	})
@@ -79,12 +97,6 @@ func (c *Client) BuyToken(tokenMint string, amount float64) error {
 		return err
 		// can be refactored to keep polling and identify failed txs
 	}
-	return nil
-}
-
-// SellToken sells the specified amount of a token, selling receives token set in config, default is USDC
-func (c *Client) SellToken(tokenMint string, amount float64) error {
-	// TODO: Implement the selling logic using the Jupiter client
 	return nil
 }
 
