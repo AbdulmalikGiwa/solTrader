@@ -1,6 +1,7 @@
 package jupiter
 
 import (
+	"errors"
 	"github.com/ilkamo/jupiter-go/jupiter"
 	"log"
 	"os"
@@ -74,6 +75,8 @@ func (c *Client) BuyToken(tokenMint string, amount float64) error {
 		c.log.Println("BuyToken: transaction confirmed")
 	} else {
 		c.log.Println("BuyToken: transaction not confirmed")
+		err = errors.New("transaction not confirmed")
+		return err
 		// can be refactored to keep polling and identify failed txs
 	}
 	return nil
