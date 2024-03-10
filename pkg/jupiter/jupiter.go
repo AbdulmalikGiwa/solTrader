@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"solTrader/pkg/config"
+	"time"
 )
 
 // Client wraps the Jupiter client
@@ -58,6 +59,22 @@ func (c *Client) BuyToken(tokenMint string, amount float64) error {
 	if swapResponse.JSON200 == nil {
 		c.log.Println("BuyToken: failed to swap, returned NON 200 code: ", swapResponse.StatusCode())
 		return err
+	}
+	swap := swapResponse.JSON200
+	tx, err := c.config.SolClient.SendTransactionOnChain(c.config.Ctx, swap.SwapTransaction)
+
+	// Wait for tx, could be done better tbh. Just lifting sample from jup client library
+	time.Sleep(20 * time.Second)
+	confirmed, err := c.config.SolClient.CheckSignature(c.config.Ctx, tx)
+	if err != nil {
+		c.log.Println("BuyToken: failed to check signature", err)
+		// will raise this error a level up to have a retry mechanism of some sort
+	}
+	if confirmed {
+		c.log.Println("BuyToken: transaction confirmed")
+	} else {
+		c.log.Println("BuyToken: transaction not confirmed")
+		// can be refactored to keep polling and identify failed txs
 	}
 	return nil
 }
