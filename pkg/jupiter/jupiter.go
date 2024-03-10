@@ -38,7 +38,7 @@ func NewClient(config *config.TradingConfig) *Client {
 	}
 }
 
-// TradeToken buys the specified amount of a token, buying is with token set in config, default is USDC
+// TradeToken trade the specified amount of a token, default output/input default is USDC
 func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) error {
 	var buyToken string
 	var sellToken string
