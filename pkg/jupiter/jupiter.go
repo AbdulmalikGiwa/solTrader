@@ -3,6 +3,7 @@ package jupiter
 import (
 	"errors"
 	"github.com/ilkamo/jupiter-go/jupiter"
+	"github.com/shopspring/decimal"
 	"log"
 	"os"
 	"solTrader/pkg/config"
@@ -57,11 +58,11 @@ func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) 
 		// TODO: Set slippage
 	})
 	if err != nil {
-		c.log.Println("BuyToken: failed to get quote", err)
+		c.log.Println("TradeToken: failed to get quote", err)
 		return err
 	}
 	if quoteResponse.JSON200 == nil {
-		c.log.Println("BuyToken: failed to get quote, returned NON 200 code: ", quoteResponse.StatusCode())
+		c.log.Println("TradeToken: failed to get quote, returned NON 200 code: ", quoteResponse.StatusCode())
 		return err
 	}
 	dynamicComputeUnitLimit := true
@@ -72,11 +73,11 @@ func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) 
 		DynamicComputeUnitLimit: &dynamicComputeUnitLimit,
 	})
 	if err != nil {
-		c.log.Println("BuyToken: failed to swap", err)
+		c.log.Println("TradeToken: failed to swap", err)
 		return err
 	}
 	if swapResponse.JSON200 == nil {
-		c.log.Println("BuyToken: failed to swap, returned NON 200 code: ", swapResponse.StatusCode())
+		c.log.Println("TradeToken: failed to swap, returned NON 200 code: ", swapResponse.StatusCode())
 		return err
 	}
 	swap := swapResponse.JSON200
@@ -86,13 +87,13 @@ func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) 
 	time.Sleep(20 * time.Second)
 	confirmed, err := c.config.SolClient.CheckSignature(c.config.Ctx, tx)
 	if err != nil {
-		c.log.Println("BuyToken: failed to check signature", err)
+		c.log.Println("TradeToken: failed to check signature", err)
 		// will raise this error a level up to have a retry mechanism of some sort
 	}
 	if confirmed {
-		c.log.Println("BuyToken: transaction confirmed")
+		c.log.Println("TradeToken: transaction confirmed")
 	} else {
-		c.log.Println("BuyToken: transaction not confirmed")
+		c.log.Println("TradeToken: transaction not confirmed")
 		err = errors.New("transaction not confirmed")
 		return err
 		// can be refactored to keep polling and identify failed txs
@@ -100,9 +101,22 @@ func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) 
 	return nil
 }
 
-// GetCurrentPrice gets the current market price of a token, to USDC :)
-func (c *Client) GetCurrentPrice(tokenMint string) (float64, error) {
-	// TODO: Implement the logic to fetch current price using the Jupiter client
+// GetCurrentPrice gets the current market price of a token in usdc
+func (c *Client) GetCurrentPrice(tokenMint string) (decimal.Decimal, error) {
+	quoteResponse, err := c.JupiterClient.GetQuoteWithResponse(c.config.Ctx, &jupiter.GetQuoteParams{
+		InputMint:  tokenMint,
+		OutputMint: c.config.BaseMint,
+		Amount:     1,
+	})
+	if err != nil {
+		c.log.Println("GetCurrentPrice: failed to get quote", err)
+		return decimal.Zero, err
+	}
+	if quoteResponse.JSON200 == nil {
+		c.log.Println("GetCurrentPrice: failed to get quote, returned NON 200 code: ", quoteResponse.StatusCode())
+		return decimal.Zero, err
+	}
+	price, err := decimal.NewFromString(quoteResponse.JSON200.OutAmount)
 
-	return 0, nil
+	return price, nil
 }
