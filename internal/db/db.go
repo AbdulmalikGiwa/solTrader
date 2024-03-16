@@ -21,7 +21,8 @@ func CreateTable(db *sql.DB) {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS trades (
 		"token_address" TEXT NOT NULL PRIMARY KEY,
 		"last_price" REAL,
-		"holding" BOOLEAN
+		"holding" BOOLEAN,
+		"balance" REAL
 	);`
 
 	if _, err := db.Exec(createTableSQL); err != nil {
@@ -65,4 +66,40 @@ func GetLastPrice(db *sql.DB, address string) (decimal.Decimal, error) {
 	// Convert the float64 to decimal.Decimal
 	lastPriceDec := decimal.NewFromFloat(lastPrice)
 	return lastPriceDec, nil
+}
+
+func GetBalance(db *sql.DB, address string) (decimal.Decimal, error) {
+	var balance float64
+
+	query := `SELECT balance FROM token_trade WHERE address = ?`
+	err := db.QueryRow(query, address).Scan(&balance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No result for the given address
+			return decimal.Zero, fmt.Errorf("no token found for address: %s", address)
+		}
+		// Some other error occurred
+		return decimal.Zero, err
+	}
+
+	// Convert the float64 to decimal.Decimal
+	balanceDec := decimal.NewFromFloat(balance)
+	return balanceDec, nil
+}
+
+func GetBalanceAndLastPrice(db *sql.DB, address string) (float64, decimal.Decimal, error) {
+	var balance float64
+	var lastPrice float64
+
+	query := `SELECT balance, last_price FROM token_trade WHERE address = ?`
+	err := db.QueryRow(query, address).Scan(&balance, &lastPrice)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, decimal.Zero, fmt.Errorf("no token found for address: %s", address)
+		}
+		return 0, decimal.Zero, err
+	}
+
+	lastPriceDec := decimal.NewFromFloat(lastPrice)
+	return balance, lastPriceDec, nil
 }

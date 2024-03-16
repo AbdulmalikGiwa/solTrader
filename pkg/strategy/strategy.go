@@ -10,8 +10,8 @@ import (
 // TradeStrategy is the interface for the trade strategy, we currently have just one simple strategy but can be
 // extended to more complex strategies.
 type TradeStrategy interface {
-	ShouldBuy(DB *sql.DB, currentPrice decimal.Decimal, token string) bool
-	ShouldSell(currentPrice, lastBuyPrice float64) bool
+	ShouldBuy(DB *sql.DB, currentPrice decimal.Decimal, token string) (bool, float64)
+	ShouldSell(DB *sql.DB, currentPrice decimal.Decimal, token string) (bool, float64)
 }
 
 type Strategy struct {
@@ -21,20 +21,24 @@ type Strategy struct {
 }
 
 // ShouldBuy is simply custom strategy to determine if we should buy a token, can be customized, very simple for now
-func (s *Strategy) ShouldBuy(DB *sql.DB, currentPrice decimal.Decimal, token string) bool {
-	lastSellPrice, err := db.GetLastPrice(DB, token)
+func (s *Strategy) ShouldBuy(DB *sql.DB, currentPrice decimal.Decimal, token string) (bool, float64) {
+	balance, lastSellPrice, err := db.GetBalanceAndLastPrice(DB, token)
 	if err != nil {
 		s.Log.Printf("failed to get last price for token from db: %s, error: %s", token, err)
+		return false, 0
 	}
-	return currentPrice.LessThanOrEqual(lastSellPrice.Mul(decimal.NewFromFloat(1 - s.BuyThreshold)))
+	s.Log.Printf("last sell price: %s", lastSellPrice)
+	return currentPrice.LessThanOrEqual(lastSellPrice.Mul(decimal.NewFromFloat(1 - s.BuyThreshold))), balance
 }
 
 // ShouldSell is simply custom strategy to determine if we should sell a token, can be customized, very simple for now
-func (s *Strategy) ShouldSell(DB *sql.DB, currentPrice decimal.Decimal, token string) bool {
-	lastBuyPrice, err := db.GetLastPrice(DB, token)
+func (s *Strategy) ShouldSell(DB *sql.DB, currentPrice decimal.Decimal, token string) (bool, float64) {
+	balance, lastBuyPrice, err := db.GetBalanceAndLastPrice(DB, token)
 	if err != nil {
 		s.Log.Printf("failed to get last price for token from db: %s, error: %s", token, err)
+		return false, 0
 	}
-	return currentPrice.GreaterThanOrEqual(lastBuyPrice.Mul(decimal.NewFromFloat(1 + s.SellThreshold)))
+	s.Log.Printf("last buy price: %s", lastBuyPrice)
+	return currentPrice.GreaterThanOrEqual(lastBuyPrice.Mul(decimal.NewFromFloat(1 + s.SellThreshold))), balance
 
 }

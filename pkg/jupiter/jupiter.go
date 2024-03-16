@@ -25,17 +25,18 @@ type Client struct {
 }
 
 // NewClient creates a new Jupiter client
-func NewClient(config *config.TradingConfig) *Client {
+func NewClient(config *config.TradingConfig) (*Client, error) {
 	jupClient, err := jupiter.NewClientWithResponses(config.ClientRPC)
 	if err != nil {
 		log.Fatal("failed to create Jupiter client", err)
+		return nil, err
 	}
 	logger := log.New(os.Stdout, "jupiter", log.LstdFlags)
 	return &Client{
 		JupiterClient: jupClient,
 		log:           logger,
 		config:        config,
-	}
+	}, nil
 }
 
 // TradeToken trade the specified amount of a token, default output/input default is USDC
