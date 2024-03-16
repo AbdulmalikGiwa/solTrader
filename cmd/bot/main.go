@@ -30,7 +30,8 @@ func main() {
 		SellThreshold: 0.10,
 		Log:           *log.Default(),
 	}
-	mainTrader := trader.NewTrader(jupiterClient, tradingStrategy, "token")
+	// TODO: Replace the hardcoded token with the token from the config
+	mainTrader := trader.NewTrader(jupiterClient, tradingStrategy, "BFek4xVLbyW9w2cfcuFxh974f7TtAjWWjJq2kSrgthGL")
 	for {
 		if err := mainTrader.ExecuteTrade(database); err != nil {
 			log.Printf("Error executing trade: %v", err)

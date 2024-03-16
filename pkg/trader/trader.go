@@ -3,6 +3,7 @@ package trader
 import (
 	"database/sql"
 	"github.com/shopspring/decimal"
+	"log"
 	"solTrader/pkg/jupiter"
 	"solTrader/pkg/strategy"
 )
@@ -31,16 +32,19 @@ func (t *Trader) ExecuteTrade(DB *sql.DB) error {
 	if err != nil {
 		return err
 	}
+	log.Println("ExecuteTrade Price ", currentPrice)
 	shouldBuy, buyBalance := t.Strategy.ShouldBuy(DB, currentPrice, t.Token)
 	shouldSell, sellBalance := t.Strategy.ShouldSell(DB, currentPrice, t.Token)
 	if shouldBuy {
 		// Execute buy logic
+		log.Println("ExecuteTrade Buy")
 		if err := t.JupiterClient.TradeToken(t.Token, buyBalance, jupiter.BuyType); err != nil {
 			return err
 		}
 		t.LastBuyPrice = currentPrice
 	} else if shouldSell {
 		// Execute sell logic
+		log.Println("ExecuteTrade Sell")
 		if err := t.JupiterClient.TradeToken(t.Token, sellBalance, jupiter.SellType); err != nil {
 			return err
 		}

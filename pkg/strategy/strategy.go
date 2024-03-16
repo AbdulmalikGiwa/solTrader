@@ -24,7 +24,7 @@ type Strategy struct {
 func (s *Strategy) ShouldBuy(DB *sql.DB, currentPrice decimal.Decimal, token string) (bool, float64) {
 	balance, lastSellPrice, err := db.GetBalanceAndLastPrice(DB, token)
 	if err != nil {
-		s.Log.Printf("failed to get last price for token from db: %s, error: %s", token, err)
+		s.Log.Printf("ShouldBuy: failed to get last price for token from db: %s, error: %s", token, err)
 		return false, 0
 	}
 	s.Log.Printf("last sell price: %s", lastSellPrice)
@@ -35,7 +35,7 @@ func (s *Strategy) ShouldBuy(DB *sql.DB, currentPrice decimal.Decimal, token str
 func (s *Strategy) ShouldSell(DB *sql.DB, currentPrice decimal.Decimal, token string) (bool, float64) {
 	balance, lastBuyPrice, err := db.GetBalanceAndLastPrice(DB, token)
 	if err != nil {
-		s.Log.Printf("failed to get last price for token from db: %s, error: %s", token, err)
+		s.Log.Printf("ShouldSell: failed to get last price for token from db: %s, error: %s", token, err)
 		return false, 0
 	}
 	s.Log.Printf("last buy price: %s", lastBuyPrice)

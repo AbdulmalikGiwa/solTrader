@@ -32,8 +32,8 @@ func CreateTable(db *sql.DB) {
 
 func UpsertTokenTrade(db *sql.DB, address string, lastPrice decimal.Decimal, holding bool) {
 	lastPriceString := lastPrice.String()
-	upsertSQL := `INSERT INTO token_trade (address, last_price, holding) VALUES (?, ?, ?)
-				ON CONFLICT(address) DO UPDATE SET last_price = excluded.last_price, holding = excluded.holding;`
+	upsertSQL := `INSERT INTO trades (token_address, last_price, holding) VALUES (?, ?, ?)
+				ON CONFLICT(token_address) DO UPDATE SET last_price = excluded.last_price, holding = excluded.holding;`
 	holdingInt := 0
 	if holding {
 		holdingInt = 1
@@ -52,7 +52,7 @@ func UpsertTokenTrade(db *sql.DB, address string, lastPrice decimal.Decimal, hol
 func GetLastPrice(db *sql.DB, address string) (decimal.Decimal, error) {
 	var lastPrice float64
 
-	query := `SELECT last_price FROM token_trade WHERE address = ?`
+	query := `SELECT last_price FROM trades WHERE token_address = ?`
 	err := db.QueryRow(query, address).Scan(&lastPrice)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -71,7 +71,7 @@ func GetLastPrice(db *sql.DB, address string) (decimal.Decimal, error) {
 func GetBalance(db *sql.DB, address string) (decimal.Decimal, error) {
 	var balance float64
 
-	query := `SELECT balance FROM token_trade WHERE address = ?`
+	query := `SELECT balance FROM trades WHERE token_address = ?`
 	err := db.QueryRow(query, address).Scan(&balance)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -91,7 +91,7 @@ func GetBalanceAndLastPrice(db *sql.DB, address string) (float64, decimal.Decima
 	var balance float64
 	var lastPrice float64
 
-	query := `SELECT balance, last_price FROM token_trade WHERE address = ?`
+	query := `SELECT balance, last_price FROM trades WHERE token_address = ?`
 	err := db.QueryRow(query, address).Scan(&balance, &lastPrice)
 	if err != nil {
 		if err == sql.ErrNoRows {

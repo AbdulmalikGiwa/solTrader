@@ -55,7 +55,7 @@ func (c *Client) TradeToken(tokenMint string, amount float64, tradeType string) 
 	quoteResponse, err := c.JupiterClient.GetQuoteWithResponse(c.config.Ctx, &jupiter.GetQuoteParams{
 		InputMint:  buyToken,
 		OutputMint: sellToken,
-		Amount:     jupiter.AmountParameter(amount),
+		Amount:     int(amount),
 		// TODO: Set slippage
 	})
 	if err != nil {
