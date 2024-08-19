@@ -2,12 +2,13 @@ package jupiter
 
 import (
 	"errors"
-	"github.com/ilkamo/jupiter-go/jupiter"
-	"github.com/shopspring/decimal"
 	"log"
 	"os"
 	"solTrader/pkg/config"
 	"time"
+
+	"github.com/ilkamo/jupiter-go/jupiter"
+	"github.com/shopspring/decimal"
 )
 
 const (
